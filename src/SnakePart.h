@@ -90,51 +90,39 @@ public:
     SnakePart(const SnakePart& other) : m_CurrentPosition(other.m_CurrentPosition), m_PastPosition(other.m_PastPosition), m_Next(other.m_Next) {}
     SnakePart() = default;
 
-    inline void SetNext(SnakePart& next){
-        m_Next = &next;
-       // m_Next->MoveEvent += SnakePartMoveEvent(MovePartTo);
-        //m_Next->MoveEvent += MovePartTo;
-        //m_Next->m_Listener = &SnakePart::MoveTo;
+//    void SetNext(SnakePart& next){
+//        m_Next = &next;
+//    }
+    void SetNext(SnakePart* next){
+        m_Next = next;
     }
-    inline SnakePart* GetNext() const{
+    [[nodiscard]] SnakePart* GetNext() const{
         if(m_Next == nullptr) {
-            return m_Next;
-            //throw std::out_of_range("SnakePart: out of range");
+            throw std::out_of_range("SnakePart: out of range");
         }
         return m_Next;
     }
-    inline void MoveTo(const Position newPosition){
+
+    void MoveTo(const Position newPosition){
         m_PastPosition = m_CurrentPosition;
         m_CurrentPosition = newPosition;
 
-//            if(MoveEvent.Empty())
-//                throw std::exception();
-            //MoveEvent.Invoke(*this, m_PastPosition);
-        //(this->*m_Listener)(newPosition);
         if(m_Next != nullptr)
             m_Next->MoveTo(m_PastPosition);
     }
 
-    inline Position GetPosition() const{
+    [[nodiscard]] Position GetPosition() const{
         return m_CurrentPosition;
     }
 
-    inline Position GetPastPosition() const{
+    [[nodiscard]] Position GetPastPosition() const{
         return m_PastPosition;
     }
-
-//    SnakePart& operator=(const SnakePart& other){
-//        m_CurrentPosition = other.m_CurrentPosition;
-//        m_PastPosition = other.m_PastPosition;
-//        return *this;
-//    }
 };
 
 inline void MovePartTo(SnakePart& part, const Position& newPos){ // called after the MoveEvent is fired
     part.m_PastPosition = part.m_CurrentPosition;
     part.m_CurrentPosition = newPos;
 }
-
-//inline void MovePartTo(SnakePart& part, const Position& newPos);
 
 #endif //SNAKE_SNAKEPART_H

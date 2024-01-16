@@ -6,6 +6,8 @@
 #include <iostream>
 #include <memory>
 #include <exception>
+#include <cstdlib>
+#include <random>
 #include "windows.h"
 
 #include "SnakePart.h"
@@ -20,13 +22,25 @@ enum class VisualDisplays : char {
 
 class Drawer{ // TODO: MAKE IT A SINGLETON
 private:
-    Snake m_Snake;
+    Snake* m_Snake;
+
     int m_PlayingFieldWidth = 20;
     int m_PlayingFieldHeight = 10;
-    COORD m_CursorWaitingPosition;
-    Position m_Velocity;
     bool m_FieldAlreadyDrawer = false;
+    int m_Score = 0;
+    int m_AppleScore = 8;
+    bool m_AppleIsEated = true;
+    int m_FontScale = 18;
+
+    Position m_ApplePosition;
+    Position m_Velocity;
+
     std::stringstream m_Field;
+    std::default_random_engine m_RandomEngine;
+
+    COORD m_CursorWaitingPosition;
+    DWORD m_PrevConsoleMode;
+    CONSOLE_FONT_INFOEX m_LastFont;
 
     inline static Drawer* m_instance = nullptr;
 
@@ -41,14 +55,19 @@ public:
         }
     }
 
-    void Init(Snake& snake, int fieldWidth, int fieldHeight){
+    void Init(Snake* snake, int fieldWidth, int fieldHeight){
         m_Snake = snake;
         m_PlayingFieldWidth = fieldWidth;
         m_PlayingFieldHeight = fieldHeight;
-        m_CursorWaitingPosition.X = fieldWidth + 1;
-        m_CursorWaitingPosition.Y = fieldHeight + 1;
-        m_Snake.SetBorders(fieldWidth + 1, fieldHeight + 1);
+        m_CursorWaitingPosition.X = static_cast<SHORT>(fieldWidth + 1);
+        m_CursorWaitingPosition.Y = static_cast<SHORT>(fieldHeight + 1);
+        m_Snake->SetBorders(fieldWidth + 1, fieldHeight + 1);
         m_Velocity = Position(0, -1);
+        m_LastFont = {0};
+        
+        HideCursor();
+        SetConsoleFont();
+        SetWindowSize(m_FontScale * (m_PlayingFieldHeight + 11), m_FontScale * (m_PlayingFieldWidth + 2));
     }
 
     void MoveSnake(MoveAction direction){
@@ -61,54 +80,61 @@ public:
         else if(direction == MoveAction::DOWN)
             m_Velocity = Position(0, -1);
 
-        m_Snake.MoveHead(m_Snake.HeadPosition() + m_Velocity);
+        m_Snake->MoveHead(m_Snake->HeadPosition() + m_Velocity);
     }
 
     void Draw(MoveAction, bool&);
 
 private:
     Drawer() = default;
-    explicit Drawer(Snake snake) : m_Snake(snake), m_CursorWaitingPosition() {
-        snake.SetBorders(m_PlayingFieldWidth, m_PlayingFieldHeight);
-        //SetWindowSize(m_PlayingFieldWidth * m_SizeScaler, m_PlayingFieldHeight * m_SizeScaler);
-    }
 
     ~Drawer(){
         delete m_instance;
+        delete m_Snake;
     }
 
     void DrawPlayField();
+    void DrawApples();
 
     inline void SetWindowSize(int wndWidth, int wndHeight){
         HWND hWindowConsole = GetConsoleWindow();
 
-        MoveWindow(hWindowConsole, 500, 500, wndWidth, wndHeight, TRUE);
-        //RECT currentPosition;
-        //GetWindowRect(hWindowConsole, &currentPosition);
-        //MoveWindow(hWindowConsole, currentPosition.left, currentPosition.top, 400, 200, TRUE);
+        RECT currentPosition;
+        GetWindowRect(hWindowConsole, &currentPosition);
+        MoveWindow(hWindowConsole, currentPosition.left, currentPosition.top, wndWidth, wndHeight, TRUE);
     }
 
-    void ClearScreen(){
-//        char fillChar = ' ';
-//        COORD tl = {0,0};
-//        CONSOLE_SCREEN_BUFFER_INFO s;
-//        HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE);
-//        GetConsoleScreenBufferInfo(console, &s);
-//        DWORD written, cells = s.dwSize.X * s.dwSize.Y;
-//        FillConsoleOutputCharacter(console, fillChar, cells, tl, &written);
-//        FillConsoleOutputAttribute(console, s.wAttributes, cells, tl, &written);
-//        SetConsoleCursorPosition(console, tl);
-        HWND c = GetConsoleWindow();
+    void HideCursor(){
+        HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
 
-        RECT cRect;
-        GetWindowRect(c, &cRect);
-        for(int i = 0; i <= cRect.top - (m_PlayingFieldHeight + 1); i++){
-            std::cout << '\n';
+        CONSOLE_CURSOR_INFO cursorInfo;
+        GetConsoleCursorInfo(handle, &cursorInfo);
+        cursorInfo.bVisible = false;
+        SetConsoleCursorInfo(handle, &cursorInfo);
+    }
+
+    void ClearSnake(){
+        for(int i = 0; i < m_Snake->Size(); i++) {
+            Position pos = (*m_Snake)[i]->GetPastPosition();
+            DrawSymbolAt(pos.X, pos.Y, ' ');
         }
     }
 
-    inline void GetFontSize(){
-        // TODO
+    void SetConsoleFont(){
+        HANDLE cHandle = GetStdHandle(STD_OUTPUT_HANDLE);
+
+        CONSOLE_FONT_INFOEX cfi = {0};
+        cfi.cbSize = sizeof(cfi);
+        cfi.dwFontSize.X = 18;
+        cfi.dwFontSize.Y = 18;
+
+        wcscpy_s(cfi.FaceName, L"Terminal");
+        SetCurrentConsoleFontEx(cHandle, 0, &cfi);
+    }
+
+    void DrawScore(){
+        SetCursorPosition(m_PlayingFieldWidth + 4, (m_PlayingFieldHeight + 2) / 2);
+        std::cout << std::setfill('0') << std::setw(5) << m_Score;
     }
 
     void DrawSymbolAt(int x, int y, char symbol){
@@ -119,7 +145,15 @@ private:
         SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
         std::cout << symbol;
 
-        SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), m_CursorWaitingPosition);
+        //SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), m_CursorWaitingPosition);
+    }
+
+    void MoveCursorTo(int x, int y){
+        COORD coord;
+        coord.X = x - 1;
+        coord.Y = y - 1;
+
+        SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
     }
 
     void SetCursorPosition(int x, int y){

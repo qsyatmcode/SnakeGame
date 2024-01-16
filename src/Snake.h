@@ -19,25 +19,30 @@ public:
     Snake(const Snake& other) : m_Head(other.m_Head) {}
     Snake() = default;
 
-    Snake& operator=(const Snake& other) {
-        this->m_Head = other.m_Head;
-        this->m_Size = other.m_Size;
-        this->m_isDead = other.m_isDead;
-        this->m_PlayingFieldWidth = other.m_PlayingFieldWidth;
-        this->m_PlayingFieldHeight = other.m_PlayingFieldHeight;
-        this->m_bordersAlreadySet = other.m_bordersAlreadySet;
-
-        return *this;
+    ~Snake(){
+        for(int i = m_Size - 1; i >= 0; i++){
+            delete (*this)[i];
+        }
     }
 
-    void AddPart(SnakePart& newPart){
-        //m_Size++;
-        //(*this)[m_Size - 1].SetNext(newPart);
+//    Snake& operator=(const Snake& other) {
+//        this->m_Head = other.m_Head;
+//        this->m_Size = other.m_Size;
+//        this->m_isDead = other.m_isDead;
+//        this->m_PlayingFieldWidth = other.m_PlayingFieldWidth;
+//        this->m_PlayingFieldHeight = other.m_PlayingFieldHeight;
+//        this->m_bordersAlreadySet = other.m_bordersAlreadySet;
+//
+//        return *this;
+//    }
+
+    void AddPart(SnakePart* newPart){
         this->Last().SetNext(newPart);
 
         m_Size++;
     }
-    SnakePart& operator[](int index){
+
+    SnakePart* operator[](int index){
         if(index >= m_Size)
             throw std::out_of_range("Snake: out of range");
 
@@ -48,10 +53,10 @@ public:
             }
         }
 
-        return *currentPart;
+        return currentPart;
     }
 
-    inline void MoveHead(const Position newPosition){
+    void MoveHead(const Position newPosition){
         m_Head.MoveTo(newPosition);
 
         Position headPos = m_Head.GetPosition();
@@ -59,17 +64,17 @@ public:
             m_isDead = true;
         }else {
             for(int i = 1; i < this->m_Size; i++){
-                if(headPos == (*this)[i].GetPosition())
+                if(headPos == (*this)[i]->GetPosition())
                     m_isDead = true;
             }
         }
     }
 
-    inline unsigned Size() const{
+    [[nodiscard]] unsigned Size() const{
         return m_Size;
     }
 
-    inline bool IsDead() const{
+    [[nodiscard]] bool IsDead() const{
         return m_isDead;
     }
 
@@ -91,9 +96,7 @@ public:
         return m_Head.GetPosition();
     }
 
-    inline void SetBorders(unsigned fieldWidth, unsigned fieldHeight){
-        if(m_bordersAlreadySet)
-            throw std::runtime_error("Snake: borders have already been set");
+    void SetBorders(int fieldWidth, int fieldHeight){
         m_PlayingFieldWidth = fieldWidth;
         m_PlayingFieldHeight = fieldHeight;
         m_bordersAlreadySet = true;
