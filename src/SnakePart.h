@@ -80,19 +80,13 @@ class SnakePart{
     Position m_CurrentPosition;
     Position m_PastPosition;
 
-    void (SnakePart::*m_Listener) (const Position);
 public:
     SnakePartMoveEvent MoveEvent;
-
-    friend void MovePartTo(SnakePart& part, const Position& newPos);
 
     explicit SnakePart(const Position& position) : m_CurrentPosition(position), m_PastPosition(position), MoveEvent() { };
     SnakePart(const SnakePart& other) : m_CurrentPosition(other.m_CurrentPosition), m_PastPosition(other.m_PastPosition), m_Next(other.m_Next) {}
     SnakePart() = default;
 
-//    void SetNext(SnakePart& next){
-//        m_Next = &next;
-//    }
     void SetNext(SnakePart* next){
         m_Next = next;
     }
@@ -119,10 +113,5 @@ public:
         return m_PastPosition;
     }
 };
-
-inline void MovePartTo(SnakePart& part, const Position& newPos){ // called after the MoveEvent is fired
-    part.m_PastPosition = part.m_CurrentPosition;
-    part.m_CurrentPosition = newPos;
-}
 
 #endif //SNAKE_SNAKEPART_H

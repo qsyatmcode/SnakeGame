@@ -12,7 +12,6 @@ private:
 
     int m_PlayingFieldWidth = 0;
     int m_PlayingFieldHeight = 0;
-    bool m_bordersAlreadySet = false;
 
 public:
     explicit Snake(Position startPosition) : m_Head(startPosition){ }
@@ -24,17 +23,6 @@ public:
             delete (*this)[i];
         }
     }
-
-//    Snake& operator=(const Snake& other) {
-//        this->m_Head = other.m_Head;
-//        this->m_Size = other.m_Size;
-//        this->m_isDead = other.m_isDead;
-//        this->m_PlayingFieldWidth = other.m_PlayingFieldWidth;
-//        this->m_PlayingFieldHeight = other.m_PlayingFieldHeight;
-//        this->m_bordersAlreadySet = other.m_bordersAlreadySet;
-//
-//        return *this;
-//    }
 
     void AddPart(SnakePart* newPart){
         this->Last().SetNext(newPart);
@@ -48,7 +36,7 @@ public:
 
         SnakePart* currentPart = &m_Head;
         if(index > 0) {
-            for (int i = 0; i < index; i++) { // index = 1
+            for (int i = 0; i < index; i++) {
                 currentPart = currentPart->GetNext();
             }
         }
@@ -80,7 +68,7 @@ public:
 
     SnakePart& Last(){
         SnakePart* currentPart = &m_Head;
-        for (int i = 0; i < m_Size - 1; i++) { // index = 1
+        for (int i = 0; i < m_Size - 1; i++) {
             SnakePart* next = currentPart->GetNext();
             if(next != nullptr){
                 currentPart = next;
@@ -99,7 +87,6 @@ public:
     void SetBorders(int fieldWidth, int fieldHeight){
         m_PlayingFieldWidth = fieldWidth;
         m_PlayingFieldHeight = fieldHeight;
-        m_bordersAlreadySet = true;
     }
 };
 

@@ -2,20 +2,9 @@
 #include <sstream>
 
 void Drawer::DrawPlayField() {
-//    int height = m_PlayingFieldHeight + 1; // + 2 for borders
-//    int width = m_PlayingFieldWidth + 1;
-//
-//    // todo stringStream
-//    //std::stringstream m_Field;
-//
-//    char borderChar = static_cast<char>(VisualDisplays::PLAYING_FIELD_BORDER);
-
     if(!m_FieldAlreadyDrawer) {
         int height = m_PlayingFieldHeight + 1; // + 2 for borders
         int width = m_PlayingFieldWidth + 1;
-
-        // todo stringStream
-        //std::stringstream m_Field;
 
         char borderChar = static_cast<char>(VisualDisplays::PLAYING_FIELD_BORDER);
 
@@ -30,7 +19,6 @@ void Drawer::DrawPlayField() {
         std::cout << m_Field.str();
     }
 
-    //std::cout << m_Field.str();
     m_FieldAlreadyDrawer = true;
 }
 
@@ -62,7 +50,7 @@ void Drawer::Draw(MoveAction moveDirection, bool& isDead) {
     ClearSnake();
 
     DrawApples();
-    // TODO: print score on the screen
+
     if(m_Snake->HeadPosition() == m_ApplePosition) {
         m_AppleIsEated = true;
 

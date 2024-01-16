@@ -20,7 +20,7 @@ enum class VisualDisplays : char {
     APPLE = 'o'
 };
 
-class Drawer{ // TODO: MAKE IT A SINGLETON
+class Drawer{
 private:
     Snake* m_Snake;
 
@@ -37,10 +37,6 @@ private:
 
     std::stringstream m_Field;
     std::default_random_engine m_RandomEngine;
-
-    COORD m_CursorWaitingPosition;
-    DWORD m_PrevConsoleMode;
-    CONSOLE_FONT_INFOEX m_LastFont;
 
     inline static Drawer* m_instance = nullptr;
 
@@ -59,12 +55,9 @@ public:
         m_Snake = snake;
         m_PlayingFieldWidth = fieldWidth;
         m_PlayingFieldHeight = fieldHeight;
-        m_CursorWaitingPosition.X = static_cast<SHORT>(fieldWidth + 1);
-        m_CursorWaitingPosition.Y = static_cast<SHORT>(fieldHeight + 1);
         m_Snake->SetBorders(fieldWidth + 1, fieldHeight + 1);
         m_Velocity = Position(0, -1);
-        m_LastFont = {0};
-        
+
         HideCursor();
         SetConsoleFont();
         SetWindowSize(m_FontScale * (m_PlayingFieldHeight + 11), m_FontScale * (m_PlayingFieldWidth + 2));
@@ -144,16 +137,6 @@ private:
 
         SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
         std::cout << symbol;
-
-        //SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), m_CursorWaitingPosition);
-    }
-
-    void MoveCursorTo(int x, int y){
-        COORD coord;
-        coord.X = x - 1;
-        coord.Y = y - 1;
-
-        SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
     }
 
     void SetCursorPosition(int x, int y){
